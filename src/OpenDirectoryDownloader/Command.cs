@@ -34,12 +34,13 @@ public class Command
 			"│ Press T for thread info                                                 │\n" +
 			"│ Press U for Save TXT                                                    │\n" +
 			"│ Press J for Save JSON                                                   │\n" +
+			"│ Press D for Save Database                                                   │\n" +
 			"├─────────────────────────────────────────────────────────────────────────┤\n" +
 			"│ Press ESC or X to EXIT                                                  │\n" +
 			"└─────────────────────────────────────────────────────────────────────────┘\n");
 	}
 
-	internal static void ProcessConsoleInput(OpenDirectoryIndexer openDirectoryIndexer)
+	internal static async void ProcessConsoleInput(OpenDirectoryIndexer openDirectoryIndexer)
 	{
 		if (Console.IsInputRedirected)
 		{
@@ -148,8 +149,8 @@ public class Command
 							SaveSession(openDirectoryIndexer);
 							break;
 						case ConsoleKey.U:
-							SaveUrls(openDirectoryIndexer);
-							break;
+							await SaveUrls(openDirectoryIndexer, openDirectoryIndexer.OpenDirectoryIndexerSettings.CommandLineOptions);
+					break;
 						default:
 							break;
 					}
@@ -183,19 +184,31 @@ public class Command
 		}
 	}
 
-	private static void SaveUrls(OpenDirectoryIndexer openDirectoryIndexer)
+	public static async Task SaveUrls(OpenDirectoryIndexer openDirectoryIndexer, CommandLineOptions commandLineOptions)
 	{
 		try
 		{
-			Program.Logger.Information("Saving URL list to file..");
-			Console.WriteLine("Saving URL list to file..");
+			
 
 			IEnumerable<string> distinctUrls = OpenDirectoryIndexer.Session.Root.AllFileUrls.Distinct().Select(i => WebUtility.UrlDecode(i));
-			string urlsPath = Library.GetOutputFullPath(OpenDirectoryIndexer.Session, openDirectoryIndexer.OpenDirectoryIndexerSettings, "txt");
-			File.WriteAllLines(urlsPath, distinctUrls);
+			Program.Logger.Debug($"EnablePostgres: {openDirectoryIndexer.OpenDirectoryIndexerSettings.CommandLineOptions.EnablePostgres}");
+			if (openDirectoryIndexer.OpenDirectoryIndexerSettings.CommandLineOptions.EnablePostgres)
+			{
+				Program.Logger.Information("Inserting URLs into PostgreSQL database...");
+				var handler = new PostgresHandler(openDirectoryIndexer.OpenDirectoryIndexerSettings.CommandLineOptions.PostgresConnectionString);
+				await handler.InsertUrls(distinctUrls);
+				Program.Logger.Information("URLs inserted into PostgreSQL database.");
+			}
+			else
+			{
+				Program.Logger.Information("Saving URL list to file..DodoDOOD");
+				Console.WriteLine("Saving URL list to file..");
+				string urlsPath = Library.GetOutputFullPath(OpenDirectoryIndexer.Session, openDirectoryIndexer.OpenDirectoryIndexerSettings, "txt");
+				File.WriteAllLines(urlsPath, distinctUrls);
 
-			Program.Logger.Information("Saved URL list to file: {path}", urlsPath);
-			Console.WriteLine($"Saved URL list to file: {urlsPath}");
+				Program.Logger.Information("Saved URL list to file: {path}", urlsPath);
+				Console.WriteLine($"Saved URL list to file: {urlsPath}");
+			}
 		}
 		catch (Exception ex)
 		{

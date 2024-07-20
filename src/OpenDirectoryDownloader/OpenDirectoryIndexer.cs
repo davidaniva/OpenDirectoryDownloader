@@ -680,7 +680,10 @@ public partial class OpenDirectoryIndexer
 						Program.Logger.Error(ex, "Error saving session to JSON");
 					}
 				}
-
+				if (OpenDirectoryIndexerSettings.CommandLineOptions.EnablePostgres)
+				{
+					await Command.SaveUrls(this, OpenDirectoryIndexerSettings.CommandLineOptions);
+				}
 				Program.Logger.Information("Finished indexing!");
 				Console.WriteLine("Finished indexing!");
 

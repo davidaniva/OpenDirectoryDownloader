@@ -157,6 +157,11 @@ public class Program
 		Command.ProcessConsoleInput(openDirectoryIndexer);
 
 		await openDirectoryIndexer.IndexingTask;
+		if (CommandLineOptions.EnablePostgres && string.IsNullOrEmpty(CommandLineOptions.PostgresConnectionString))
+		{
+			Console.WriteLine("PostgreSQL connection string is required when enabling PostgreSQL support.");
+			return 1;
+		}
 
 		if (!CommandLineOptions.Quit)
 		{

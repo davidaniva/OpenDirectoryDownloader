@@ -24,6 +24,11 @@ public class CommandLineOptions
 
 	[Option('j', "json", Required = false, Default = false, HelpText = "Save JSON file")]
 	public bool Json { get; set; }
+	[Option("postgres", Required = false, Default = false, HelpText = "Enable PostgreSQL database insertion")]
+	public bool EnablePostgres { get; set; }
+
+	[Option("postgres-connection", Required = false, Default = "", HelpText = "PostgreSQL connection string")]
+	public string PostgresConnectionString { get; set; }
 
 	[Option('f', "no-urls", Required = false, Default = false, HelpText = "Do not save URLs file")]
 	public bool NoUrls { get; set; }
